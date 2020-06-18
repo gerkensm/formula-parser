@@ -86,92 +86,92 @@ switch (yystate) {
 case 1:
 
       return $$[$0-1];
-
+    
 break;
 case 2:
 
       this.$ = yy.callVariable($$[$0][0]);
-
+    
 break;
 case 3:
 
       this.$ = yy.toNumber($$[$0]);
-
+    
 break;
 case 4:
 
       this.$ = yy.trimEdges($$[$0]);
-
+    
 break;
 case 5:
 
       this.$ = yy.evaluateByOperator('&', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 6:
 
       this.$ = yy.evaluateByOperator('=', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 7:
 
       this.$ = yy.evaluateByOperator('+', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 8:
 
       this.$ = $$[$0-1];
-
+    
 break;
 case 9:
 
       this.$ = yy.evaluateByOperator('<=', [$$[$0-3], $$[$0]]);
-
+    
 break;
 case 10:
 
       this.$ = yy.evaluateByOperator('>=', [$$[$0-3], $$[$0]]);
-
+    
 break;
 case 11:
 
       this.$ = yy.evaluateByOperator('<>', [$$[$0-3], $$[$0]]);
-
+    
 break;
 case 12:
 
       this.$ = yy.evaluateByOperator('NOT', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 13:
 
       this.$ = yy.evaluateByOperator('>', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 14:
 
       this.$ = yy.evaluateByOperator('<', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 15:
 
       this.$ = yy.evaluateByOperator('-', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 16:
 
       this.$ = yy.evaluateByOperator('*', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 17:
 
       this.$ = yy.evaluateByOperator('/', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 18:
 
       this.$ = yy.evaluateByOperator('^', [$$[$0-2], $$[$0]]);
-
+    
 break;
 case 19:
 
@@ -182,7 +182,7 @@ case 19:
       if (isNaN(this.$)) {
           this.$ = 0;
       }
-
+    
 break;
 case 20:
 
@@ -193,69 +193,69 @@ case 20:
       if (isNaN(this.$)) {
           this.$ = 0;
       }
-
+    
 break;
 case 21:
 
       this.$ = yy.callFunction($$[$0-2]);
-
+    
 break;
 case 22:
 
       this.$ = yy.callFunction($$[$0-3], $$[$0-1]);
-
+    
 break;
 case 26: case 27: case 28:
 
       this.$ = yy.cellValue($$[$0]);
-
+    
 break;
 case 29: case 30: case 31: case 32: case 33: case 34: case 35: case 36: case 37:
 
       this.$ = yy.rangeValue($$[$0-2], $$[$0]);
-
+    
 break;
 case 38: case 42:
 
       this.$ = [$$[$0]];
-
+    
 break;
 case 39:
 
       this.$ = yy.trimEdges(yytext).split(',');
-
+    
 break;
 case 40: case 41:
 
       $$[$0-2].push($$[$0]);
       this.$ = $$[$0-2];
-
+    
 break;
 case 43:
 
       this.$ = (Array.isArray($$[$0-2]) ? $$[$0-2] : [$$[$0-2]]);
       this.$.push($$[$0]);
-
+    
 break;
 case 44:
 
       this.$ = $$[$0];
-
+    
 break;
 case 45:
 
       this.$ = ($$[$0-2] + '.' + $$[$0]) * 1;
-
+    
 break;
 case 46:
 
       this.$ = $$[$0-1] * 0.01;
-
+    
 break;
 case 47:
 
       this.$ = yy.throwError($$[$0]);
-
+    
 break;
 }
 },
@@ -861,60 +861,64 @@ case 10:return 31;
 break;
 case 11:return 31;
 break;
-case 12:return 33;
+case 12:return 31;
 break;
-case 13:return 28;
+case 13:return 31;
 break;
-case 14:return 9;
+case 14:return 33;
 break;
-case 15:return ' ';
+case 15:return 28;
 break;
-case 16:return 32;
+case 16:return 9;
 break;
-case 17:return 27;
+case 17:return ' ';
 break;
-case 18:return 29;
+case 18:return 32;
 break;
-case 19:return 30;
+case 19:return 27;
 break;
-case 20:return 18;
+case 20:return 29;
 break;
-case 21:return 19;
+case 21:return 30;
 break;
-case 22:return 17;
+case 22:return 18;
 break;
-case 23:return 11;
+case 23:return 19;
 break;
-case 24:return 20;
+case 24:return 17;
 break;
-case 25:return 12;
+case 25:return 11;
 break;
-case 26:return 13;
+case 26:return 20;
 break;
-case 27:return 15;
+case 27:return 12;
 break;
-case 28:return 14;
+case 28:return 13;
 break;
-case 29:return 16;
+case 29:return 15;
 break;
-case 30:return '"';
+case 30:return 14;
 break;
-case 31:return "'";
+case 31:return 16;
 break;
-case 32:return "!";
+case 32:return '"';
 break;
-case 33:return 10;
+case 33:return "'";
 break;
-case 34:return 34;
+case 34:return "!";
 break;
-case 35:return '#';
+case 35:return 10;
 break;
-case 36:return 5;
+case 36:return 34;
+break;
+case 37:return '#';
+break;
+case 38:return 5;
 break;
 }
 },
-rules: [/^(?:\s+)/,/^(?:"(\\["]|[^"])*")/,/^(?:'(\\[']|[^'])*')/,/^(?:[A-Za-z]{1,}[A-Za-z_0-9\.]+(?=[(]))/,/^(?:#[A-Z0-9\/]+(!|\?)?)/,/^(?:\$[A-Za-z]+\$[0-9]+)/,/^(?:\$[A-Za-z]+[0-9]+)/,/^(?:[A-Za-z]+\$[0-9]+)/,/^(?:[A-Za-z]+[0-9]+)/,/^(?:[A-Za-z\.]+(?=[(]))/,/^(?:[A-Za-z]{1,}[A-Za-z_0-9]+)/,/^(?:[A-Za-z_]+)/,/^(?:[0-9]+)/,/^(?:\[(.*)?\])/,/^(?:&)/,/^(?: )/,/^(?:[.])/,/^(?::)/,/^(?:;)/,/^(?:,)/,/^(?:\*)/,/^(?:\/)/,/^(?:-)/,/^(?:\+)/,/^(?:\^)/,/^(?:\()/,/^(?:\))/,/^(?:>)/,/^(?:<)/,/^(?:NOT\b)/,/^(?:")/,/^(?:')/,/^(?:!)/,/^(?:=)/,/^(?:%)/,/^(?:[#])/,/^(?:$)/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36],"inclusive":true}}
+rules: [/^(?:\s+)/,/^(?:"(\\["]|[^"])*")/,/^(?:'(\\[']|[^'])*')/,/^(?:[A-Za-z]{1,}[A-Za-z_0-9\.]+(?=[(]))/,/^(?:#[A-Z0-9\/]+(!|\?)?)/,/^(?:\$[A-Za-z]+\$[0-9]+)/,/^(?:\$[A-Za-z]+[0-9]+)/,/^(?:[A-Za-z]+\$[0-9]+)/,/^(?:[A-Za-z]+[0-9]+)/,/^(?:[A-Za-z\.]+(?=[(]))/,/^(?:[A-Za-z]{1,}[A-Za-z_0-9]+)/,/^(?:[A-Za-z_]+)/,/^(?:[一-龠ぁ-ゔァ-ヴーa-zA-Zａ-ｚＡ-Ｚ々〆〤1]{1,}[一-龠ぁ-ゔァ-ヴーa-zA-Zａ-ｚＡ-Ｚ々〆〤_0-9０-９]+)/,/^(?:[一-龠ぁ-ゔァ-ヴーa-zA-Zａ-ｚＡ-Ｚ々〆〤_]+)/,/^(?:[0-9]+)/,/^(?:\[(.*)?\])/,/^(?:&)/,/^(?: )/,/^(?:[.])/,/^(?::)/,/^(?:;)/,/^(?:,)/,/^(?:\*)/,/^(?:\/)/,/^(?:-)/,/^(?:\+)/,/^(?:\^)/,/^(?:\()/,/^(?:\))/,/^(?:>)/,/^(?:<)/,/^(?:NOT\b)/,/^(?:")/,/^(?:')/,/^(?:!)/,/^(?:=)/,/^(?:%)/,/^(?:[#])/,/^(?:$)/],
+conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38],"inclusive":true}}
 });
 return lexer;
 })();
@@ -931,4 +935,15 @@ if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
 exports.parser = grammarParser;
 exports.Parser = grammarParser.Parser;
 exports.parse = function () { return grammarParser.parse.apply(grammarParser, arguments); };
+exports.main = function commonjsMain (args) {
+    if (!args[1]) {
+        console.log('Usage: '+args[0]+' FILE');
+        process.exit(1);
+    }
+    var source = require('fs').readFileSync(require('path').normalize(args[1]), "utf8");
+    return exports.parser.parse(source);
+};
+if (typeof module !== 'undefined' && require.main === module) {
+  exports.main(process.argv.slice(1));
+}
 }
