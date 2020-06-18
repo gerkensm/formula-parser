@@ -1,5 +1,5 @@
 {
-  "name": "new-formula-parser",
+  "name": "@luongvietdung/formula-parser",
   "version": "3.0.3",
   "description": "Formula parser",
   "browser": "dist/formula-parser.js",
@@ -33,7 +33,7 @@
     "excel",
     "spreadsheet"
   ],
-  "author": "Handsoncode <hello@handsontable.com>",
+  "author": "Luong Viet Dung <dung.lv1992@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/handsontable/formula-parser/issues"
@@ -82,7 +82,7 @@
     "webpack": "^3.2.0"
   },
   "dependencies": {
-    "@handsontable/formulajs": "^2.0.2",
+    "@formulajs/formulajs": "^2.0.2",
     "tiny-emitter": "^2.1.0"
   },
   "jest": {

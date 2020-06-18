@@ -6,6 +6,9 @@ This project is forked from [handsontable/formula-parser](https://github.com/han
 
 Documentation available at [handsontable/formula-parser](https://github.com/handsontable/formula-parser)
 
+## Features
+ * All excel formulas defined in [formula.js](https://github.com/formulajs/formulajs);
+
 ### License
 
 The MIT License (see the [LICENSE](https://github.com/handsontable/formula-parser/blob/master/LICENSE) file for the full text).
