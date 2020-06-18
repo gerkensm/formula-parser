@@ -980,7 +980,7 @@ exports.LOG2E = function() {
 
 exports.LOG = function(number, base) {
   number = utils.parseNumber(number);
-  base = utils.parseNumber(base);
+  base = base ? utils.parseNumber(base) : 10;
   if (utils.anyIsError(number, base)) {
     return error.value;
   }
@@ -1006,6 +1006,7 @@ exports.MOD = function(dividend, divisor) {
     return error.div0;
   }
   var modulus = Math.abs(dividend % divisor);
+  modulus = dividend < 0 ? divisor - modulus : modulus;
   return (divisor > 0) ? modulus : -modulus;
 };
 
@@ -1455,25 +1456,29 @@ exports.SUM = function() {
   return result;
 };
 
-exports.SUMIF = function(range, criteria) {
-  range = utils.parseNumberArray(utils.flatten(range));
-
+exports.SUMIF = function (range, criteria, sumRange) {
+  range = utils.flatten(range);
+  if (sumRange) {
+    sumRange = utils.flatten(sumRange);
+  } else {
+    sumRange = range;
+  }
   if (range instanceof Error) {
     return range;
   }
   var result = 0;
   var isWildcard = criteria === void 0 || criteria === '*';
   var tokenizedCriteria = isWildcard ? null : evalExpression.parse(criteria + '');
-
   for (var i = 0; i < range.length; i++) {
     var value = range[i];
+    var sumValue = sumRange[i];
 
     if (isWildcard) {
       result += value;
     } else {
       var tokens = [evalExpression.createToken(value, evalExpression.TOKEN_TYPE_LITERAL)].concat(tokenizedCriteria);
 
-      result += (evalExpression.compute(tokens) ? value : 0);
+      result += (evalExpression.compute(tokens) ? sumValue : 0);
     }
   }
 
@@ -3752,10 +3757,10 @@ exports.SPLIT = function (text, separator) {
 };
 
 exports.SUBSTITUTE = function(text, old_text, new_text, occurrence) {
-  if (arguments.length < 2) {
+  if (arguments.length < 3) {
     return error.na;
   }
-  if (!text || !old_text || !new_text) {
+  if (!text || !old_text) {
     return text;
   } else if (occurrence === undefined) {
     return text.replace(new RegExp(old_text, 'g'), new_text);
@@ -4209,7 +4214,7 @@ var WEEKEND_TYPES = [
   [6, 6]
 ];
 
-exports.DATE = function(year, month, day) {
+exports.DATE = function (year, month, day) {
   var result;
 
   year = utils.parseNumber(year);
@@ -4229,7 +4234,68 @@ exports.DATE = function(year, month, day) {
   return result;
 };
 
-exports.DATEVALUE = function(date_text) {
+exports.DATEDIF = function (start_date, end_date, unit) {
+  unit = unit.toUpperCase();
+  start_date = utils.parseDate(start_date);
+  end_date = utils.parseDate(end_date);
+
+  var start_date_year = start_date.getFullYear();
+  var start_date_month = start_date.getMonth();
+  var start_date_day = start_date.getDate();
+  var end_date_year = end_date.getFullYear();
+  var end_date_month = end_date.getMonth();
+  var end_date_day = end_date.getDate();
+
+  var result;
+  switch (unit) {
+    case 'Y':
+      result = Math.floor(exports.YEARFRAC(start_date, end_date));
+      break;
+    case 'D':
+      result = exports.DAYS(end_date, start_date);
+      break;
+    case 'M':
+      result = end_date_month - start_date_month + 12 * (end_date_year - start_date_year);
+      if (end_date_day < start_date_day) {
+        result--;
+      }
+      break;
+    case 'MD':
+      if (start_date_day <= end_date_day) {
+        result = end_date_day - start_date_day;
+      } else {
+        if (end_date_month === 0) {
+          start_date.setFullYear(end_date_year - 1);
+          start_date.setMonth(12);
+        } else {
+          start_date.setFullYear(end_date_year);
+          start_date.setMonth(end_date_month - 1);
+        }
+        result = exports.DAYS(end_date, start_date);
+      }
+      break;
+    case 'YM':
+      result = end_date_month - start_date_month + 12 * (end_date_year - start_date_year);
+      if (end_date_day < start_date_day) {
+        result--;
+      }
+      result = result % 12;
+      break;
+    case 'YD':
+      if (end_date_month > start_date_month || (end_date_month === start_date_month && end_date_day < start_date_day)) {
+        start_date.setFullYear(end_date_year);
+      } else {
+        start_date.setFullYear(end_date_year - 1);
+      }
+
+      result = exports.DAYS(end_date, start_date);
+      break;
+  }
+
+  return result;
+};
+
+exports.DATEVALUE = function (date_text) {
   var modifier = 2;
   var date;
 
@@ -4250,7 +4316,7 @@ exports.DATEVALUE = function(date_text) {
   return Math.ceil((date - d1900) / 86400000) + modifier;
 };
 
-exports.DAY = function(serial_number) {
+exports.DAY = function (serial_number) {
   var date = utils.parseDate(serial_number);
   if (date instanceof Error) {
     return date;
@@ -4259,7 +4325,7 @@ exports.DAY = function(serial_number) {
   return date.getDate();
 };
 
-exports.DAYS = function(end_date, start_date) {
+exports.DAYS = function (end_date, start_date) {
   end_date = utils.parseDate(end_date);
   start_date = utils.parseDate(start_date);
 
@@ -4273,7 +4339,7 @@ exports.DAYS = function(end_date, start_date) {
   return serial(end_date) - serial(start_date);
 };
 
-exports.DAYS360 = function(start_date, end_date, method) {
+exports.DAYS360 = function (start_date, end_date, method) {
   method = utils.parseBool(method);
   start_date = utils.parseDate(start_date);
   end_date = utils.parseDate(end_date);
@@ -4314,7 +4380,7 @@ exports.DAYS360 = function(start_date, end_date, method) {
     30 * (em - sm) + (ed - sd);
 };
 
-exports.EDATE = function(start_date, months) {
+exports.EDATE = function (start_date, months) {
   start_date = utils.parseDate(start_date);
 
   if (start_date instanceof Error) {
@@ -4329,7 +4395,7 @@ exports.EDATE = function(start_date, months) {
   return serial(start_date);
 };
 
-exports.EOMONTH = function(start_date, months) {
+exports.EOMONTH = function (start_date, months) {
   start_date = utils.parseDate(start_date);
 
   if (start_date instanceof Error) {
@@ -4343,7 +4409,7 @@ exports.EOMONTH = function(start_date, months) {
   return serial(new Date(start_date.getFullYear(), start_date.getMonth() + months + 1, 0));
 };
 
-exports.HOUR = function(serial_number) {
+exports.HOUR = function (serial_number) {
   serial_number = utils.parseDate(serial_number);
 
   if (serial_number instanceof Error) {
@@ -4360,30 +4426,30 @@ exports.INTERVAL = function (second) {
     second = parseInt(second, 10);
   }
 
-  var year  = Math.floor(second/946080000);
-  second    = second%946080000;
-  var month = Math.floor(second/2592000);
-  second    = second%2592000;
-  var day   = Math.floor(second/86400);
-  second    = second%86400;
+  var year = Math.floor(second / 946080000);
+  second = second % 946080000;
+  var month = Math.floor(second / 2592000);
+  second = second % 2592000;
+  var day = Math.floor(second / 86400);
+  second = second % 86400;
 
-  var hour  = Math.floor(second/3600);
-  second    = second%3600;
-  var min   = Math.floor(second/60);
-  second    = second%60;
-  var sec   = second;
+  var hour = Math.floor(second / 3600);
+  second = second % 3600;
+  var min = Math.floor(second / 60);
+  second = second % 60;
+  var sec = second;
 
-  year  = (year  > 0) ? year  + 'Y' : '';
+  year = (year > 0) ? year + 'Y' : '';
   month = (month > 0) ? month + 'M' : '';
-  day   = (day   > 0) ? day   + 'D' : '';
-  hour  = (hour  > 0) ? hour  + 'H' : '';
-  min   = (min   > 0) ? min   + 'M' : '';
-  sec   = (sec   > 0) ? sec   + 'S' : '';
+  day = (day > 0) ? day + 'D' : '';
+  hour = (hour > 0) ? hour + 'H' : '';
+  min = (min > 0) ? min + 'M' : '';
+  sec = (sec > 0) ? sec + 'S' : '';
 
   return 'P' + year + month + day + 'T' + hour + min + sec;
 };
 
-exports.ISOWEEKNUM = function(date) {
+exports.ISOWEEKNUM = function (date) {
   date = utils.parseDate(date);
 
   if (date instanceof Error) {
@@ -4397,7 +4463,7 @@ exports.ISOWEEKNUM = function(date) {
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
 };
 
-exports.MINUTE = function(serial_number) {
+exports.MINUTE = function (serial_number) {
   serial_number = utils.parseDate(serial_number);
 
   if (serial_number instanceof Error) {
@@ -4407,7 +4473,7 @@ exports.MINUTE = function(serial_number) {
   return serial_number.getMinutes();
 };
 
-exports.MONTH = function(serial_number) {
+exports.MONTH = function (serial_number) {
   serial_number = utils.parseDate(serial_number);
 
   if (serial_number instanceof Error) {
@@ -4417,11 +4483,11 @@ exports.MONTH = function(serial_number) {
   return serial_number.getMonth() + 1;
 };
 
-exports.NETWORKDAYS = function(start_date, end_date, holidays) {
+exports.NETWORKDAYS = function (start_date, end_date, holidays) {
   return this.NETWORKDAYS.INTL(start_date, end_date, 1, holidays);
 };
 
-exports.NETWORKDAYS.INTL = function(start_date, end_date, weekend, holidays) {
+exports.NETWORKDAYS.INTL = function (start_date, end_date, weekend, holidays) {
   start_date = utils.parseDate(start_date);
 
   if (start_date instanceof Error) {
@@ -4480,11 +4546,11 @@ exports.NETWORKDAYS.INTL = function(start_date, end_date, weekend, holidays) {
   return total;
 };
 
-exports.NOW = function() {
+exports.NOW = function () {
   return new Date();
 };
 
-exports.SECOND = function(serial_number) {
+exports.SECOND = function (serial_number) {
   serial_number = utils.parseDate(serial_number);
   if (serial_number instanceof Error) {
     return serial_number;
@@ -4493,7 +4559,7 @@ exports.SECOND = function(serial_number) {
   return serial_number.getSeconds();
 };
 
-exports.TIME = function(hour, minute, second) {
+exports.TIME = function (hour, minute, second) {
   hour = utils.parseNumber(hour);
   minute = utils.parseNumber(minute);
   second = utils.parseNumber(second);
@@ -4507,7 +4573,7 @@ exports.TIME = function(hour, minute, second) {
   return (3600 * hour + 60 * minute + second) / 86400;
 };
 
-exports.TIMEVALUE = function(time_text) {
+exports.TIMEVALUE = function (time_text) {
   time_text = utils.parseDate(time_text);
 
   if (time_text instanceof Error) {
@@ -4517,11 +4583,15 @@ exports.TIMEVALUE = function(time_text) {
   return (3600 * time_text.getHours() + 60 * time_text.getMinutes() + time_text.getSeconds()) / 86400;
 };
 
-exports.TODAY = function() {
-  return new Date();
+exports.TODAY = function () {
+  var today = new Date();
+  today.setHours(0);
+  today.setMinutes(0);
+  today.setSeconds(0);
+  return today;
 };
 
-exports.WEEKDAY = function(serial_number, return_type) {
+exports.WEEKDAY = function (serial_number, return_type) {
   serial_number = utils.parseDate(serial_number);
   if (serial_number instanceof Error) {
     return serial_number;
@@ -4534,7 +4604,7 @@ exports.WEEKDAY = function(serial_number, return_type) {
   return WEEK_TYPES[return_type][day];
 };
 
-exports.WEEKNUM = function(serial_number, return_type) {
+exports.WEEKNUM = function (serial_number, return_type) {
   serial_number = utils.parseDate(serial_number);
   if (serial_number instanceof Error) {
     return serial_number;
@@ -4553,11 +4623,11 @@ exports.WEEKNUM = function(serial_number, return_type) {
   return Math.floor(((serial_number - jan) / (1000 * 60 * 60 * 24)) / 7 + 1) + inc;
 };
 
-exports.WORKDAY = function(start_date, days, holidays) {
+exports.WORKDAY = function (start_date, days, holidays) {
   return this.WORKDAY.INTL(start_date, days, 1, holidays);
 };
 
-exports.WORKDAY.INTL = function(start_date, days, weekend, holidays) {
+exports.WORKDAY.INTL = function (start_date, days, weekend, holidays) {
   start_date = utils.parseDate(start_date);
   if (start_date instanceof Error) {
     return start_date;
@@ -4611,7 +4681,7 @@ exports.WORKDAY.INTL = function(start_date, days, weekend, holidays) {
   return start_date;
 };
 
-exports.YEAR = function(serial_number) {
+exports.YEAR = function (serial_number) {
   serial_number = utils.parseDate(serial_number);
 
   if (serial_number instanceof Error) {
@@ -4630,7 +4700,7 @@ function daysBetween(start_date, end_date) {
   return Math.ceil((end_date - start_date) / 1000 / 60 / 60 / 24);
 }
 
-exports.YEARFRAC = function(start_date, end_date, basis) {
+exports.YEARFRAC = function (start_date, end_date, basis) {
   start_date = utils.parseDate(start_date);
   if (start_date instanceof Error) {
     return start_date;
@@ -4662,7 +4732,7 @@ exports.YEARFRAC = function(start_date, end_date, basis) {
       return ((ed + em * 30 + ey * 360) - (sd + sm * 30 + sy * 360)) / 360;
     case 1:
       // Actual/actual
-      var feb29Between = function(date1, date2) {
+      var feb29Between = function (date1, date2) {
         var year1 = date1.getFullYear();
         var mar1year1 = new Date(year1, 2, 1);
         if (isLeapYear(year1) && date1 < mar1year1 && date2 >= mar1year1) {
@@ -5555,21 +5625,35 @@ jStat.diff = function diff(arr) {
 
 // ranks of an array
 jStat.rank = function (arr) {
-  var arrlen = arr.length;
-  var sorted = arr.slice().sort(ascNum);
-  var ranks = new Array(arrlen);
-  var val;
-  for (var i = 0; i < arrlen; i++) {
-    var first = sorted.indexOf(arr[i]);
-    var last = sorted.lastIndexOf(arr[i]);
-    if (first === last) {
-      val = first;
+  var i;
+  var distinctNumbers = [];
+  var numberCounts = {};
+  for (i = 0; i < arr.length; i++) {
+    var number = arr[i];
+    if (numberCounts[number]) {
+      numberCounts[number]++;
     } else {
-      val = (first + last) / 2;
+      numberCounts[number] = 1;
+      distinctNumbers.push(number);
     }
-    ranks[i] = val + 1;
   }
-  return ranks;
+
+  var sortedDistinctNumbers = distinctNumbers.sort(ascNum);
+  var numberRanks = {};
+  var currentRank = 1;
+  for (i = 0; i < sortedDistinctNumbers.length; i++) {
+    var number = sortedDistinctNumbers[i];
+    var count = numberCounts[number];
+    var first = currentRank;
+    var last = currentRank + count - 1;
+    var rank = (first + last) / 2;
+    numberRanks[number] = rank;
+    currentRank += count;
+  }
+
+  return arr.map(function (number) {
+    return numberRanks[number];
+  });
 };
 
 
@@ -6026,6 +6110,9 @@ jStat.gammafn = function gammafn(x) {
   var xnum = 0;
   var y = x;
   var i, z, yi, res;
+  if (x > 171.6243769536076) {
+    return Infinity;
+  }
   if (y <= 0) {
     res = y % 1 + 3.6e-16;
     if (res) {
@@ -13048,6 +13135,15 @@ exports.IF = function(test, then_value, otherwise_value) {
   return test ? then_value : otherwise_value;
 };
 
+exports.IFS = function() {
+  for (var i = 0; i < arguments.length / 2; i++) {
+    if (arguments[i * 2]) {
+      return arguments[i * 2 + 1];
+    }
+  }
+  return error.na;
+};
+
 exports.IFERROR = function(value, valueIfError) {
   if (information.ISERROR(value)) {
     return valueIfError;
@@ -13220,10 +13316,6 @@ exports.COUPPCD = function() {
 };
 
 exports.CUMIPMT = function(rate, periods, value, start, end, type) {
-  // Credits: algorithm inspired by Apache OpenOffice
-  // Credits: Hannes Stiebitzhofer for the translations of function and variable names
-  // Requires exports.FV() and exports.PMT() from exports.js [http://stoic.com/exports/]
-
   rate = utils.parseNumber(rate);
   periods = utils.parseNumber(periods);
   value = utils.parseNumber(value);
@@ -13231,30 +13323,26 @@ exports.CUMIPMT = function(rate, periods, value, start, end, type) {
     return error.value;
   }
 
-  // Return error if either rate, periods, or value are lower than or equal to zero
   if (rate <= 0 || periods <= 0 || value <= 0) {
     return error.num;
   }
 
-  // Return error if start < 1, end < 1, or start > end
   if (start < 1 || end < 1 || start > end) {
     return error.num;
   }
 
-  // Return error if type is neither 0 nor 1
   if (type !== 0 && type !== 1) {
     return error.num;
   }
 
-  // Compute cumulative interest
   var payment = exports.PMT(rate, periods, value, 0, type);
   var interest = 0;
 
   if (start === 1) {
     if (type === 0) {
       interest = -value;
-      start++;
     }
+    start++;
   }
 
   for (var i = start; i <= end; i++) {
@@ -13266,7 +13354,6 @@ exports.CUMIPMT = function(rate, periods, value, start, end, type) {
   }
   interest *= rate;
 
-  // Return cumulative interest
   return interest;
 };
 
@@ -14236,6 +14323,8 @@ exports.MATCH = function(lookupValue, lookupArray, matchType) {
     return error.na;
   }
 
+  lookupArray = utils.flatten(lookupArray);
+
   if (matchType !== -1 && matchType !== 0 && matchType !== 1) {
     return error.na;
   }
@@ -14288,17 +14377,21 @@ exports.VLOOKUP = function (needle, table, index, rangeLookup) {
     return error.na;
   }
 
-  rangeLookup = rangeLookup || false;
+  rangeLookup = !(rangeLookup === 0 || rangeLookup === false);
+  var result = error.na;
   for (var i = 0; i < table.length; i++) {
     var row = table[i];
-    if ((!rangeLookup && row[0] === needle) ||
-      ((row[0] === needle) ||
-        (rangeLookup && typeof row[0] === "string" && row[0].toLowerCase().indexOf(needle.toLowerCase()) !== -1))) {
-      return (index < (row.length + 1) ? row[index - 1] : error.ref);
+
+    if (row[0] === needle) {
+      result = (index < (row.length + 1) ? row[index - 1] : error.ref);
+      break;
+    } else if ((rangeLookup && row[0] <= needle) ||
+      (rangeLookup && typeof row[0] === "string" && row[0].localeCompare(needle) < 0)) {
+      result = (index < (row.length + 1) ? row[index - 1] : error.ref);
     }
   }
 
-  return error.na;
+  return result;
 };
 
 exports.HLOOKUP = function (needle, table, index, rangeLookup) {
@@ -14320,6 +14413,32 @@ exports.HLOOKUP = function (needle, table, index, rangeLookup) {
   }
 
   return error.na;
+};
+
+exports.LOOKUP = function (searchCriterion, array, resultArray) {
+  array = utils.flatten(array);
+  resultArray = utils.flatten(resultArray);
+
+  var index = array.indexOf(searchCriterion);
+
+  if (index > -1) {
+    return resultArray[index];
+  } else {
+    return resultArray[resultArray.length - 1];
+  }
+};
+
+exports.INDEX = function (cellRange, rowNumber, columnNumber) {
+  columnNumber = columnNumber ? columnNumber : 1;
+  rowNumber = rowNumber ? rowNumber : 1;
+
+  if (rowNumber <= cellRange.length) {
+    if (columnNumber <= cellRange[rowNumber - 1].length) {
+      return cellRange[rowNumber - 1][columnNumber - 1];
+    }
+  }
+
+  return error.ref;
 };
 
 
@@ -15374,60 +15493,64 @@ case 10:return 31;
 break;
 case 11:return 31;
 break;
-case 12:return 33;
+case 12:return 31;
 break;
-case 13:return 28;
+case 13:return 31;
 break;
-case 14:return 9;
+case 14:return 33;
 break;
-case 15:return ' ';
+case 15:return 28;
 break;
-case 16:return 32;
+case 16:return 9;
 break;
-case 17:return 27;
+case 17:return ' ';
 break;
-case 18:return 29;
+case 18:return 32;
 break;
-case 19:return 30;
+case 19:return 27;
 break;
-case 20:return 18;
+case 20:return 29;
 break;
-case 21:return 19;
+case 21:return 30;
 break;
-case 22:return 17;
+case 22:return 18;
 break;
-case 23:return 11;
+case 23:return 19;
 break;
-case 24:return 20;
+case 24:return 17;
 break;
-case 25:return 12;
+case 25:return 11;
 break;
-case 26:return 13;
+case 26:return 20;
 break;
-case 27:return 15;
+case 27:return 12;
 break;
-case 28:return 14;
+case 28:return 13;
 break;
-case 29:return 16;
+case 29:return 15;
 break;
-case 30:return '"';
+case 30:return 14;
 break;
-case 31:return "'";
+case 31:return 16;
 break;
-case 32:return "!";
+case 32:return '"';
 break;
-case 33:return 10;
+case 33:return "'";
 break;
-case 34:return 34;
+case 34:return "!";
 break;
-case 35:return '#';
+case 35:return 10;
 break;
-case 36:return 5;
+case 36:return 34;
+break;
+case 37:return '#';
+break;
+case 38:return 5;
 break;
 }
 },
-rules: [/^(?:\s+)/,/^(?:"(\\["]|[^"])*")/,/^(?:'(\\[']|[^'])*')/,/^(?:[A-Za-z]{1,}[A-Za-z_0-9\.]+(?=[(]))/,/^(?:#[A-Z0-9\/]+(!|\?)?)/,/^(?:\$[A-Za-z]+\$[0-9]+)/,/^(?:\$[A-Za-z]+[0-9]+)/,/^(?:[A-Za-z]+\$[0-9]+)/,/^(?:[A-Za-z]+[0-9]+)/,/^(?:[A-Za-z\.]+(?=[(]))/,/^(?:[A-Za-z]{1,}[A-Za-z_0-9]+)/,/^(?:[A-Za-z_]+)/,/^(?:[0-9]+)/,/^(?:\[(.*)?\])/,/^(?:&)/,/^(?: )/,/^(?:[.])/,/^(?::)/,/^(?:;)/,/^(?:,)/,/^(?:\*)/,/^(?:\/)/,/^(?:-)/,/^(?:\+)/,/^(?:\^)/,/^(?:\()/,/^(?:\))/,/^(?:>)/,/^(?:<)/,/^(?:NOT\b)/,/^(?:")/,/^(?:')/,/^(?:!)/,/^(?:=)/,/^(?:%)/,/^(?:[#])/,/^(?:$)/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36],"inclusive":true}}
+rules: [/^(?:\s+)/,/^(?:"(\\["]|[^"])*")/,/^(?:'(\\[']|[^'])*')/,/^(?:[A-Za-z]{1,}[A-Za-z_0-9\.]+(?=[(]))/,/^(?:#[A-Z0-9\/]+(!|\?)?)/,/^(?:\$[A-Za-z]+\$[0-9]+)/,/^(?:\$[A-Za-z]+[0-9]+)/,/^(?:[A-Za-z]+\$[0-9]+)/,/^(?:[A-Za-z]+[0-9]+)/,/^(?:[A-Za-z\.]+(?=[(]))/,/^(?:[A-Za-z]{1,}[A-Za-z_0-9]+)/,/^(?:[A-Za-z_]+)/,/^(?:[一-龠ぁ-ゔァ-ヴーa-zA-Zａ-ｚＡ-Ｚ々〆〤1]{1,}[一-龠ぁ-ゔァ-ヴーa-zA-Zａ-ｚＡ-Ｚ々〆〤_0-9０-９]+)/,/^(?:[一-龠ぁ-ゔァ-ヴーa-zA-Zａ-ｚＡ-Ｚ々〆〤_]+)/,/^(?:[0-9]+)/,/^(?:\[(.*)?\])/,/^(?:&)/,/^(?: )/,/^(?:[.])/,/^(?::)/,/^(?:;)/,/^(?:,)/,/^(?:\*)/,/^(?:\/)/,/^(?:-)/,/^(?:\+)/,/^(?:\^)/,/^(?:\()/,/^(?:\))/,/^(?:>)/,/^(?:<)/,/^(?:NOT\b)/,/^(?:")/,/^(?:')/,/^(?:!)/,/^(?:=)/,/^(?:%)/,/^(?:[#])/,/^(?:$)/],
+conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38],"inclusive":true}}
 });
 return lexer;
 })();
