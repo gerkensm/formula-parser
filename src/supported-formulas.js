@@ -384,6 +384,9 @@ const SUPPORTED_FORMULAS = [
   'XOR',
   'YEAR',
   'YEARFRAC',
+  'LOOKUP',
+  'VLOOKUP',
+  'HLOOKUP',
 ];
 
 export default SUPPORTED_FORMULAS;

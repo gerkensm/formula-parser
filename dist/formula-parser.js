@@ -3272,13 +3272,12 @@ exports.TRANSPOSE = function(matrix) {
 
 exports.T = text.T;
 
-exports.T.DIST = function(x, df, cumulative) {
-  x = utils.parseNumber(x);
-  df = utils.parseNumber(df);
-  if (utils.anyIsError(x, df)) {
-    return error.value;
+exports.T.DIST = function (x, df, tails) {
+  if (tails !== 1 && tails !== 2) {
+    return error.num;
   }
-  return (cumulative) ? jStat.studentt.cdf(x, df) : jStat.studentt.pdf(x, df);
+
+  return (tails === 1) ? exports.T.DIST.RT(x, df) : exports.T.DIST['2T'](x, df);
 };
 
 exports.T.DIST['2T'] = function(x, df) {
@@ -4296,24 +4295,17 @@ exports.DATEDIF = function (start_date, end_date, unit) {
 };
 
 exports.DATEVALUE = function (date_text) {
-  var modifier = 2;
-  var date;
-
   if (typeof date_text !== 'string') {
     return error.value;
   }
 
-  date = Date.parse(date_text);
+  var date = Date.parse(date_text);
 
   if (isNaN(date)) {
     return error.value;
   }
 
-  if (date <= -2203891200000) {
-    modifier = 1;
-  }
-
-  return Math.ceil((date - d1900) / 86400000) + modifier;
+  return new Date(date_text);
 };
 
 exports.DAY = function (serial_number) {
@@ -4392,7 +4384,7 @@ exports.EDATE = function (start_date, months) {
   months = parseInt(months, 10);
   start_date.setMonth(start_date.getMonth() + months);
 
-  return serial(start_date);
+  return start_date;
 };
 
 exports.EOMONTH = function (start_date, months) {
@@ -4406,7 +4398,7 @@ exports.EOMONTH = function (start_date, months) {
   }
   months = parseInt(months, 10);
 
-  return serial(new Date(start_date.getFullYear(), start_date.getMonth() + months + 1, 0));
+  return new Date(start_date.getFullYear(), start_date.getMonth() + months + 1, 0);
 };
 
 exports.HOUR = function (serial_number) {
@@ -5625,35 +5617,21 @@ jStat.diff = function diff(arr) {
 
 // ranks of an array
 jStat.rank = function (arr) {
-  var i;
-  var distinctNumbers = [];
-  var numberCounts = {};
-  for (i = 0; i < arr.length; i++) {
-    var number = arr[i];
-    if (numberCounts[number]) {
-      numberCounts[number]++;
+  var arrlen = arr.length;
+  var sorted = arr.slice().sort(ascNum);
+  var ranks = new Array(arrlen);
+  var val;
+  for (var i = 0; i < arrlen; i++) {
+    var first = sorted.indexOf(arr[i]);
+    var last = sorted.lastIndexOf(arr[i]);
+    if (first === last) {
+      val = first;
     } else {
-      numberCounts[number] = 1;
-      distinctNumbers.push(number);
+      val = (first + last) / 2;
     }
+    ranks[i] = val + 1;
   }
-
-  var sortedDistinctNumbers = distinctNumbers.sort(ascNum);
-  var numberRanks = {};
-  var currentRank = 1;
-  for (i = 0; i < sortedDistinctNumbers.length; i++) {
-    var number = sortedDistinctNumbers[i];
-    var count = numberCounts[number];
-    var first = currentRank;
-    var last = currentRank + count - 1;
-    var rank = (first + last) / 2;
-    numberRanks[number] = rank;
-    currentRank += count;
-  }
-
-  return arr.map(function (number) {
-    return numberRanks[number];
-  });
+  return ranks;
 };
 
 
@@ -6110,9 +6088,6 @@ jStat.gammafn = function gammafn(x) {
   var xnum = 0;
   var y = x;
   var i, z, yi, res;
-  if (x > 171.6243769536076) {
-    return Infinity;
-  }
   if (y <= 0) {
     res = y % 1 + 3.6e-16;
     if (res) {
@@ -11428,7 +11403,7 @@ exports.OCT2HEX = function(number, places) {
 
 
 exports.__esModule = true;
-var SUPPORTED_FORMULAS = ['ABS', 'ACCRINT', 'ACOS', 'ACOSH', 'ACOT', 'ACOTH', 'ADD', 'AGGREGATE', 'AND', 'ARABIC', 'ARGS2ARRAY', 'ASIN', 'ASINH', 'ATAN', 'ATAN2', 'ATANH', 'AVEDEV', 'AVERAGE', 'AVERAGEA', 'AVERAGEIF', 'AVERAGEIFS', 'BASE', 'BESSELI', 'BESSELJ', 'BESSELK', 'BESSELY', 'BETA.DIST', 'BETA.INV', 'BETADIST', 'BETAINV', 'BIN2DEC', 'BIN2HEX', 'BIN2OCT', 'BINOM.DIST', 'BINOM.DIST.RANGE', 'BINOM.INV', 'BINOMDIST', 'BITAND', 'BITLSHIFT', 'BITOR', 'BITRSHIFT', 'BITXOR', 'CEILING', 'CEILINGMATH', 'CEILINGPRECISE', 'CHAR', 'CHISQ.DIST', 'CHISQ.DIST.RT', 'CHISQ.INV', 'CHISQ.INV.RT', 'CHOOSE', 'CHOOSE', 'CLEAN', 'CODE', 'COLUMN', 'COLUMNS', 'COMBIN', 'COMBINA', 'COMPLEX', 'CONCATENATE', 'CONFIDENCE', 'CONFIDENCE.NORM', 'CONFIDENCE.T', 'CONVERT', 'CORREL', 'COS', 'COSH', 'COT', 'COTH', 'COUNT', 'COUNTA', 'COUNTBLANK', 'COUNTIF', 'COUNTIFS', 'COUNTIN', 'COUNTUNIQUE', 'COVARIANCE.P', 'COVARIANCE.S', 'CSC', 'CSCH', 'CUMIPMT', 'CUMPRINC', 'DATE', 'DATEVALUE', 'DAY', 'DAYS', 'DAYS360', 'DB', 'DDB', 'DEC2BIN', 'DEC2HEX', 'DEC2OCT', 'DECIMAL', 'DEGREES', 'DELTA', 'DEVSQ', 'DIVIDE', 'DOLLARDE', 'DOLLARFR', 'E', 'EDATE', 'EFFECT', 'EOMONTH', 'EQ', 'ERF', 'ERFC', 'EVEN', 'EXACT', 'EXP', 'EXPON.DIST', 'EXPONDIST', 'F.DIST', 'F.DIST.RT', 'F.INV', 'F.INV.RT', 'FACT', 'FACTDOUBLE', 'FALSE', 'FDIST', 'FDISTRT', 'FIND', 'FINV', 'FINVRT', 'FISHER', 'FISHERINV', 'FLATTEN', 'FLOOR', 'FORECAST', 'FREQUENCY', 'FV', 'FVSCHEDULE', 'GAMMA', 'GAMMA.DIST', 'GAMMA.INV', 'GAMMADIST', 'GAMMAINV', 'GAMMALN', 'GAMMALN.PRECISE', 'GAUSS', 'GCD', 'GEOMEAN', 'GESTEP', 'GROWTH', 'GTE', 'HARMEAN', 'HEX2BIN', 'HEX2DEC', 'HEX2OCT', 'HOUR', 'HTML2TEXT', 'HYPGEOM.DIST', 'HYPGEOMDIST', 'IF', 'IMABS', 'IMAGINARY', 'IMARGUMENT', 'IMCONJUGATE', 'IMCOS', 'IMCOSH', 'IMCOT', 'IMCSC', 'IMCSCH', 'IMDIV', 'IMEXP', 'IMLN', 'IMLOG10', 'IMLOG2', 'IMPOWER', 'IMPRODUCT', 'IMREAL', 'IMSEC', 'IMSECH', 'IMSIN', 'IMSINH', 'IMSQRT', 'IMSUB', 'IMSUM', 'IMTAN', 'INT', 'INTERCEPT', 'INTERVAL', 'IPMT', 'IRR', 'ISBINARY', 'ISBLANK', 'ISEVEN', 'ISLOGICAL', 'ISNONTEXT', 'ISNUMBER', 'ISODD', 'ISODD', 'ISOWEEKNUM', 'ISPMT', 'ISTEXT', 'JOIN', 'KURT', 'LARGE', 'LCM', 'LEFT', 'LEN', 'LINEST', 'LN', 'LOG', 'LOG10', 'LOGEST', 'LOGNORM.DIST', 'LOGNORM.INV', 'LOGNORMDIST', 'LOGNORMINV', 'LOWER', 'LT', 'LTE', 'MATCH', 'MAX', 'MAXA', 'MEDIAN', 'MID', 'MIN', 'MINA', 'MINUS', 'MINUTE', 'MIRR', 'MOD', 'MODE.MULT', 'MODE.SNGL', 'MODEMULT', 'MODESNGL', 'MONTH', 'MROUND', 'MULTINOMIAL', 'MULTIPLY', 'NE', 'NEGBINOM.DIST', 'NEGBINOMDIST', 'NETWORKDAYS', 'NOMINAL', 'NORM.DIST', 'NORM.INV', 'NORM.S.DIST', 'NORM.S.INV', 'NORMDIST', 'NORMINV', 'NORMSDIST', 'NORMSINV', 'NOT', 'NOW', 'NPER', 'NPV', 'NUMBERS', 'OCT2BIN', 'OCT2DEC', 'OCT2HEX', 'ODD', 'OR', 'PDURATION', 'PEARSON', 'PERCENTILEEXC', 'PERCENTILEINC', 'PERCENTRANKEXC', 'PERCENTRANKINC', 'PERMUT', 'PERMUTATIONA', 'PHI', 'PI', 'PMT', 'POISSON.DIST', 'POISSONDIST', 'POW', 'POWER', 'PPMT', 'PROB', 'PRODUCT', 'PROPER', 'PV', 'QUARTILE.EXC', 'QUARTILE.INC', 'QUARTILEEXC', 'QUARTILEINC', 'QUOTIENT', 'RADIANS', 'RAND', 'RANDBETWEEN', 'RANK.AVG', 'RANK.EQ', 'RANKAVG', 'RANKEQ', 'RATE', 'REFERENCE', 'REGEXEXTRACT', 'REGEXMATCH', 'REGEXREPLACE', 'REPLACE', 'REPT', 'RIGHT', 'ROMAN', 'ROUND', 'ROUNDDOWN', 'ROUNDUP', 'ROW', 'ROWS', 'RRI', 'RSQ', 'SEARCH', 'SEC', 'SECH', 'SECOND', 'SERIESSUM', 'SIGN', 'SIN', 'SINH', 'SKEW', 'SKEW.P', 'SKEWP', 'SLN', 'SLOPE', 'SMALL', 'SPLIT', 'SPLIT', 'SQRT', 'SQRTPI', 'STANDARDIZE', 'STDEV.P', 'STDEV.S', 'STDEVA', 'STDEVP', 'STDEVPA', 'STDEVS', 'STEYX', 'SUBSTITUTE', 'SUBTOTAL', 'SUM', 'SUMIF', 'SUMIFS', 'SUMPRODUCT', 'SUMSQ', 'SUMX2MY2', 'SUMX2PY2', 'SUMXMY2', 'SWITCH', 'SYD', 'T', 'T.DIST', 'T.DIST.2T', 'T.DIST.RT', 'T.INV', 'T.INV.2T', 'TAN', 'TANH', 'TBILLEQ', 'TBILLPRICE', 'TBILLYIELD', 'TDIST', 'TDIST2T', 'TDISTRT', 'TIME', 'TIMEVALUE', 'TINV', 'TINV2T', 'TODAY', 'TRANSPOSE', 'TREND', 'TRIM', 'TRIMMEAN', 'TRUE', 'TRUNC', 'UNICHAR', 'UNICODE', 'UNIQUE', 'UPPER', 'VAR.P', 'VAR.S', 'VARA', 'VARP', 'VARPA', 'VARS', 'WEEKDAY', 'WEEKNUM', 'WEIBULL.DIST', 'WEIBULLDIST', 'WORKDAY', 'XIRR', 'XNPV', 'XOR', 'YEAR', 'YEARFRAC'];
+var SUPPORTED_FORMULAS = ['ABS', 'ACCRINT', 'ACOS', 'ACOSH', 'ACOT', 'ACOTH', 'ADD', 'AGGREGATE', 'AND', 'ARABIC', 'ARGS2ARRAY', 'ASIN', 'ASINH', 'ATAN', 'ATAN2', 'ATANH', 'AVEDEV', 'AVERAGE', 'AVERAGEA', 'AVERAGEIF', 'AVERAGEIFS', 'BASE', 'BESSELI', 'BESSELJ', 'BESSELK', 'BESSELY', 'BETA.DIST', 'BETA.INV', 'BETADIST', 'BETAINV', 'BIN2DEC', 'BIN2HEX', 'BIN2OCT', 'BINOM.DIST', 'BINOM.DIST.RANGE', 'BINOM.INV', 'BINOMDIST', 'BITAND', 'BITLSHIFT', 'BITOR', 'BITRSHIFT', 'BITXOR', 'CEILING', 'CEILINGMATH', 'CEILINGPRECISE', 'CHAR', 'CHISQ.DIST', 'CHISQ.DIST.RT', 'CHISQ.INV', 'CHISQ.INV.RT', 'CHOOSE', 'CHOOSE', 'CLEAN', 'CODE', 'COLUMN', 'COLUMNS', 'COMBIN', 'COMBINA', 'COMPLEX', 'CONCATENATE', 'CONFIDENCE', 'CONFIDENCE.NORM', 'CONFIDENCE.T', 'CONVERT', 'CORREL', 'COS', 'COSH', 'COT', 'COTH', 'COUNT', 'COUNTA', 'COUNTBLANK', 'COUNTIF', 'COUNTIFS', 'COUNTIN', 'COUNTUNIQUE', 'COVARIANCE.P', 'COVARIANCE.S', 'CSC', 'CSCH', 'CUMIPMT', 'CUMPRINC', 'DATE', 'DATEVALUE', 'DAY', 'DAYS', 'DAYS360', 'DB', 'DDB', 'DEC2BIN', 'DEC2HEX', 'DEC2OCT', 'DECIMAL', 'DEGREES', 'DELTA', 'DEVSQ', 'DIVIDE', 'DOLLARDE', 'DOLLARFR', 'E', 'EDATE', 'EFFECT', 'EOMONTH', 'EQ', 'ERF', 'ERFC', 'EVEN', 'EXACT', 'EXP', 'EXPON.DIST', 'EXPONDIST', 'F.DIST', 'F.DIST.RT', 'F.INV', 'F.INV.RT', 'FACT', 'FACTDOUBLE', 'FALSE', 'FDIST', 'FDISTRT', 'FIND', 'FINV', 'FINVRT', 'FISHER', 'FISHERINV', 'FLATTEN', 'FLOOR', 'FORECAST', 'FREQUENCY', 'FV', 'FVSCHEDULE', 'GAMMA', 'GAMMA.DIST', 'GAMMA.INV', 'GAMMADIST', 'GAMMAINV', 'GAMMALN', 'GAMMALN.PRECISE', 'GAUSS', 'GCD', 'GEOMEAN', 'GESTEP', 'GROWTH', 'GTE', 'HARMEAN', 'HEX2BIN', 'HEX2DEC', 'HEX2OCT', 'HOUR', 'HTML2TEXT', 'HYPGEOM.DIST', 'HYPGEOMDIST', 'IF', 'IMABS', 'IMAGINARY', 'IMARGUMENT', 'IMCONJUGATE', 'IMCOS', 'IMCOSH', 'IMCOT', 'IMCSC', 'IMCSCH', 'IMDIV', 'IMEXP', 'IMLN', 'IMLOG10', 'IMLOG2', 'IMPOWER', 'IMPRODUCT', 'IMREAL', 'IMSEC', 'IMSECH', 'IMSIN', 'IMSINH', 'IMSQRT', 'IMSUB', 'IMSUM', 'IMTAN', 'INT', 'INTERCEPT', 'INTERVAL', 'IPMT', 'IRR', 'ISBINARY', 'ISBLANK', 'ISEVEN', 'ISLOGICAL', 'ISNONTEXT', 'ISNUMBER', 'ISODD', 'ISODD', 'ISOWEEKNUM', 'ISPMT', 'ISTEXT', 'JOIN', 'KURT', 'LARGE', 'LCM', 'LEFT', 'LEN', 'LINEST', 'LN', 'LOG', 'LOG10', 'LOGEST', 'LOGNORM.DIST', 'LOGNORM.INV', 'LOGNORMDIST', 'LOGNORMINV', 'LOWER', 'LT', 'LTE', 'MATCH', 'MAX', 'MAXA', 'MEDIAN', 'MID', 'MIN', 'MINA', 'MINUS', 'MINUTE', 'MIRR', 'MOD', 'MODE.MULT', 'MODE.SNGL', 'MODEMULT', 'MODESNGL', 'MONTH', 'MROUND', 'MULTINOMIAL', 'MULTIPLY', 'NE', 'NEGBINOM.DIST', 'NEGBINOMDIST', 'NETWORKDAYS', 'NOMINAL', 'NORM.DIST', 'NORM.INV', 'NORM.S.DIST', 'NORM.S.INV', 'NORMDIST', 'NORMINV', 'NORMSDIST', 'NORMSINV', 'NOT', 'NOW', 'NPER', 'NPV', 'NUMBERS', 'OCT2BIN', 'OCT2DEC', 'OCT2HEX', 'ODD', 'OR', 'PDURATION', 'PEARSON', 'PERCENTILEEXC', 'PERCENTILEINC', 'PERCENTRANKEXC', 'PERCENTRANKINC', 'PERMUT', 'PERMUTATIONA', 'PHI', 'PI', 'PMT', 'POISSON.DIST', 'POISSONDIST', 'POW', 'POWER', 'PPMT', 'PROB', 'PRODUCT', 'PROPER', 'PV', 'QUARTILE.EXC', 'QUARTILE.INC', 'QUARTILEEXC', 'QUARTILEINC', 'QUOTIENT', 'RADIANS', 'RAND', 'RANDBETWEEN', 'RANK.AVG', 'RANK.EQ', 'RANKAVG', 'RANKEQ', 'RATE', 'REFERENCE', 'REGEXEXTRACT', 'REGEXMATCH', 'REGEXREPLACE', 'REPLACE', 'REPT', 'RIGHT', 'ROMAN', 'ROUND', 'ROUNDDOWN', 'ROUNDUP', 'ROW', 'ROWS', 'RRI', 'RSQ', 'SEARCH', 'SEC', 'SECH', 'SECOND', 'SERIESSUM', 'SIGN', 'SIN', 'SINH', 'SKEW', 'SKEW.P', 'SKEWP', 'SLN', 'SLOPE', 'SMALL', 'SPLIT', 'SPLIT', 'SQRT', 'SQRTPI', 'STANDARDIZE', 'STDEV.P', 'STDEV.S', 'STDEVA', 'STDEVP', 'STDEVPA', 'STDEVS', 'STEYX', 'SUBSTITUTE', 'SUBTOTAL', 'SUM', 'SUMIF', 'SUMIFS', 'SUMPRODUCT', 'SUMSQ', 'SUMX2MY2', 'SUMX2PY2', 'SUMXMY2', 'SWITCH', 'SYD', 'T', 'T.DIST', 'T.DIST.2T', 'T.DIST.RT', 'T.INV', 'T.INV.2T', 'TAN', 'TANH', 'TBILLEQ', 'TBILLPRICE', 'TBILLYIELD', 'TDIST', 'TDIST2T', 'TDISTRT', 'TIME', 'TIMEVALUE', 'TINV', 'TINV2T', 'TODAY', 'TRANSPOSE', 'TREND', 'TRIM', 'TRIMMEAN', 'TRUE', 'TRUNC', 'UNICHAR', 'UNICODE', 'UNIQUE', 'UPPER', 'VAR.P', 'VAR.S', 'VARA', 'VARP', 'VARPA', 'VARS', 'WEEKDAY', 'WEEKNUM', 'WEIBULL.DIST', 'WEIBULLDIST', 'WORKDAY', 'XIRR', 'XNPV', 'XOR', 'YEAR', 'YEARFRAC', 'LOOKUP', 'VLOOKUP', 'HLOOKUP'];
 
 exports['default'] = SUPPORTED_FORMULAS;
 
@@ -13844,14 +13819,18 @@ exports.NPER = function(rate, payment, present, future, type) {
   present = utils.parseNumber(present);
   future = utils.parseNumber(future);
   type = utils.parseNumber(type);
+
   if (utils.anyIsError(rate, payment, present, future, type)) {
     return error.value;
   }
 
-  // Return number of periods
-  var num = payment * (1 + rate * type) - future * rate;
-  var den = (present * rate + payment * (1 + rate * type));
-  return Math.log(num / den) / Math.log(1 + rate);
+  if (rate === 0) {
+    return (-(present + future) / payment);
+  } else {
+    var num = payment * (1 + rate * type) - future * rate;
+    var den = (present * rate + payment * (1 + rate * type));
+    return Math.log(num / den) / Math.log(1 + rate);
+  }
 };
 
 exports.NPV = function() {
@@ -13995,8 +13974,6 @@ exports.PV = function(rate, periods, payment, future, type) {
 };
 
 exports.RATE = function(periods, payment, present, future, type, guess) {
-  // Credits: rabugento
-
   guess = (guess === undefined) ? 0.01 : guess;
   future = (future === undefined) ? 0 : future;
   type = (type === undefined) ? 0 : type;
@@ -14011,41 +13988,36 @@ exports.RATE = function(periods, payment, present, future, type, guess) {
     return error.value;
   }
 
-  // Set maximum epsilon for end of iteration
   var epsMax = 1e-10;
-
-  // Set maximum number of iterations
-  var iterMax = 50;
-
-  // Implement Newton's method
-  var y, y0, y1, x0, x1 = 0,
-    f = 0,
-    i = 0;
+  var iterMax = 20;
   var rate = guess;
-  if (Math.abs(rate) < epsMax) {
-    y = present * (1 + periods * rate) + payment * (1 + rate * type) * periods + future;
-  } else {
-    f = Math.exp(periods * Math.log(1 + rate));
-    y = present * f + payment * (1 / rate + type) * (f - 1) + future;
-  }
-  y0 = present + payment * periods + future;
-  y1 = present * f + payment * (1 / rate + type) * (f - 1) + future;
-  i = x0 = 0;
-  x1 = rate;
-  while ((Math.abs(y0 - y1) > epsMax) && (i < iterMax)) {
-    rate = (y1 * x0 - y0 * x1) / (y1 - y0);
-    x0 = x1;
-    x1 = rate;
+
+  type = type ? 1 : 0;
+  for (var i = 0; i < iterMax; i++) {
+    if (rate <= -1) {
+      return error.num;
+    }
+    var y, f;
     if (Math.abs(rate) < epsMax) {
       y = present * (1 + periods * rate) + payment * (1 + rate * type) * periods + future;
     } else {
-      f = Math.exp(periods * Math.log(1 + rate));
+      f = Math.pow(1 + rate, periods);
       y = present * f + payment * (1 / rate + type) * (f - 1) + future;
     }
-    y0 = y1;
-    y1 = y;
-    ++i;
+    if (Math.abs(y) < epsMax) {
+      return rate;
+    }
+    var dy;
+    if (Math.abs(rate) < epsMax) {
+      dy = present * periods + payment * type * periods;
+    } else {
+      f = Math.pow(1 + rate, periods);
+      var df = periods * Math.pow(1 + rate, periods - 1);
+      dy = present * df + payment * (1 / rate + type) * df + payment * (-1 / (rate * rate)) * (f - 1);
+    }
+    rate -= y / dy;
   }
+
   return rate;
 };
 
@@ -14201,77 +14173,76 @@ exports.VDB = function() {
   throw new Error('VDB is not implemented');
 };
 
-// TODO needs better support for date
-// exports.XIRR = function(values, dates, guess) {
-//   // Credits: algorithm inspired by Apache OpenOffice
-//
-//   values = utils.parseNumberArray(utils.flatten(values));
-//   dates = utils.parseDateArray(utils.flatten(dates));
-//   guess = utils.parseNumber(guess);
-//
-//   if (utils.anyIsError(values, dates, guess)) {
-//     return error.value;
-//   }
-//
-//   // Calculates the resulting amount
-//   var irrResult = function(values, dates, rate) {
-//     var r = rate + 1;
-//     var result = values[0];
-//     for (var i = 1; i < values.length; i++) {
-//       result += values[i] / Math.pow(r, dateTime.DAYS(dates[i], dates[0]) / 365);
-//     }
-//     return result;
-//   };
-//
-//   // Calculates the first derivation
-//   var irrResultDeriv = function(values, dates, rate) {
-//     var r = rate + 1;
-//     var result = 0;
-//     for (var i = 1; i < values.length; i++) {
-//       var frac = dateTime.DAYS(dates[i], dates[0]) / 365;
-//       result -= frac * values[i] / Math.pow(r, frac + 1);
-//     }
-//     return result;
-//   };
-//
-//   // Check that values contains at least one positive value and one negative value
-//   var positive = false;
-//   var negative = false;
-//   for (var i = 0; i < values.length; i++) {
-//     if (values[i] > 0) {
-//       positive = true;
-//     }
-//     if (values[i] < 0) {
-//       negative = true;
-//     }
-//   }
-//
-//   // Return error if values does not contain at least one positive value and one negative value
-//   if (!positive || !negative) {
-//     return error.num;
-//   }
-//
-//   // Initialize guess and resultRate
-//   guess = guess || 0.1;
-//   var resultRate = guess;
-//
-//   // Set maximum epsilon for end of iteration
-//   var epsMax = 1e-10;
-//
-//   // Implement Newton's method
-//   var newRate, epsRate, resultValue;
-//   var contLoop = true;
-//   do {
-//     resultValue = irrResult(values, dates, resultRate);
-//     newRate = resultRate - resultValue / irrResultDeriv(values, dates, resultRate);
-//     epsRate = Math.abs(newRate - resultRate);
-//     resultRate = newRate;
-//     contLoop = (epsRate > epsMax) && (Math.abs(resultValue) > epsMax);
-//   } while (contLoop);
-//
-//   // Return internal rate of return
-//   return resultRate;
-// };
+exports.XIRR = function(values, dates, guess) {
+  // Credits: algorithm inspired by Apache OpenOffice
+
+  values = utils.parseNumberArray(utils.flatten(values));
+  dates = utils.parseDateArray(utils.flatten(dates));
+  guess = utils.parseNumber(guess);
+
+  if (utils.anyIsError(values, dates, guess)) {
+    return error.value;
+  }
+
+  // Calculates the resulting amount
+  var irrResult = function(values, dates, rate) {
+    var r = rate + 1;
+    var result = values[0];
+    for (var i = 1; i < values.length; i++) {
+      result += values[i] / Math.pow(r, dateTime.DAYS(dates[i], dates[0]) / 365);
+    }
+    return result;
+  };
+
+  // Calculates the first derivation
+  var irrResultDeriv = function(values, dates, rate) {
+    var r = rate + 1;
+    var result = 0;
+    for (var i = 1; i < values.length; i++) {
+      var frac = dateTime.DAYS(dates[i], dates[0]) / 365;
+      result -= frac * values[i] / Math.pow(r, frac + 1);
+    }
+    return result;
+  };
+
+  // Check that values contains at least one positive value and one negative value
+  var positive = false;
+  var negative = false;
+  for (var i = 0; i < values.length; i++) {
+    if (values[i] > 0) {
+      positive = true;
+    }
+    if (values[i] < 0) {
+      negative = true;
+    }
+  }
+
+  // Return error if values does not contain at least one positive value and one negative value
+  if (!positive || !negative) {
+    return error.num;
+  }
+
+  // Initialize guess and resultRate
+  guess = guess || 0.1;
+  var resultRate = guess;
+
+  // Set maximum epsilon for end of iteration
+  var epsMax = 1e-10;
+
+  // Implement Newton's method
+  var newRate, epsRate, resultValue;
+  var contLoop = true;
+  do {
+    resultValue = irrResult(values, dates, resultRate);
+    newRate = resultRate - resultValue / irrResultDeriv(values, dates, resultRate);
+    epsRate = Math.abs(newRate - resultRate);
+    resultRate = newRate;
+    contLoop = (epsRate > epsMax) && (Math.abs(resultValue) > epsMax);
+  } while (contLoop);
+
+  // Return internal rate of return
+  return resultRate;
+};
 
 exports.XNPV = function(rate, values, dates) {
   rate = utils.parseNumber(rate);
